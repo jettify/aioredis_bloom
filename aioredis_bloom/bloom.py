@@ -14,12 +14,22 @@ class BloomFilter(object):
         self._capacity = capacity
         self._failure_rate = error_rate
         # bloom filter settings
-        self._filter_size, self._hash_funcs = self.optimal_bloom_filter(
+        self._filter_size, self._hash_funcs = self._optimal_bloom_filter(
             self._capacity, self._failure_rate)
         self._bits_per_slice = self._filter_size/self._hash_funcs
 
+    @property
+    def capacity(self):
+        """Expected capacity of Bloom filter"""
+        return self._capacity
+
+    @property
+    def error_rate(self):
+        """Expected error rate for Bloom filter"""
+        return self._error_rate
+
     @staticmethod
-    def optimal_bloom_filter(capacity, failure_rate):
+    def _optimal_bloom_filter(capacity, failure_rate):
         """
         :param capaciy int:
         :param failure_rate:
@@ -97,6 +107,15 @@ class BloomFilter(object):
         :return:
         """
         # return new_bloom
+        if not isinstance(other_bloom, BloomFilter):
+            raise TypeError('other_bloom must be instance of {}'
+                            .format(self.__class__.__name__))
+
+        if other_bloom.capacity != self.capacity:
+            raise ValueError('Capacity of both bloom filters must be equal')
+
+        if self.error_rate != other_bloom.error_rate:
+            raise ValueError('Error rate of both bloom filters must be equal')
         raise NotImplementedError
 
     def intersection(self, other_bloom):

@@ -19,10 +19,11 @@ class BloomFilter(object):
         # bloom filter settings
         self._filter_size, self._hash_funcs = self._optimal_bloom_filter(
             self._capacity, self._error_rate)
-        self._bits_per_slice = self._filter_size/self._hash_funcs
+        self._bits_per_slice = int(self._filter_size/self._hash_funcs)
 
     @property
     def redis_key(self):
+        """Key in redis database, where actual bit array is stored"""
         return self._redis_key
 
     @property
@@ -53,10 +54,10 @@ class BloomFilter(object):
         :return:
         """
         bit_positions = self._calc_bit_positions(key)
-        yield from self._check_bits(self._redis_key, bit_positions)
+        return (yield from self._check_bits(self._redis_key, bit_positions))
 
     @asyncio.coroutine
-    def union(self, other_bloom, redis_key):
+    def union(self, other_bloom, redis_key=None):
         """
 
         :param other_bloom:
@@ -65,7 +66,7 @@ class BloomFilter(object):
         """
         self._validate_bloom_input(other_bloom)
         if not redis_key:
-            redis_key = 'bloom:intersection:{}:{}'.format(
+            redis_key = 'bloom:union:{}:{}'.format(
                 self.redis_key, other_bloom.redis_key)
 
         capacity = other_bloom.capacity
@@ -73,7 +74,8 @@ class BloomFilter(object):
 
         yield from self._conn.bitop_or(
             redis_key, self.redis_key, other_bloom.redis_key)
-        new_bloom = BloomFilter(capacity, error_rate, redis_key)
+
+        new_bloom = BloomFilter(self._conn, capacity, error_rate, redis_key)
         return new_bloom
 
 
@@ -95,7 +97,7 @@ class BloomFilter(object):
 
         yield from self._conn.bitop_and(
             redis_key, self.redis_key, other_bloom.redis_key)
-        new_bloom = BloomFilter(capacity, error_rate, redis_key)
+        new_bloom = BloomFilter(self._conn, capacity, error_rate, redis_key)
         return new_bloom
 
     @staticmethod
@@ -114,7 +116,7 @@ class BloomFilter(object):
         hash1 = mmh3.hash(key, 0)
         hash2 = mmh3.hash(key, hash1)
         for i in range(self._hash_funcs):
-            yield (hash1 + i * hash2) % self._bits_per_slice
+            yield abs((hash1 + i * hash2) % self._bits_per_slice)
 
     def _calc_bit_positions(self, key):
         offset = 0
@@ -140,14 +142,17 @@ class BloomFilter(object):
         # TODO: preload script and use evalsha
         script_check_bits = """
         for _, arg in ipairs(ARGV) do
-            result = redis.call('GETBIT', KEYS[1], arg)
-            if not result then
+            if redis.call('GETBIT', KEYS[1], arg) == 0
+            then
                 return 0
             end
         end
         return 1
         """
-        yield from self._conn.eval(script_check_bits, [key], bit_positions)
+        is_all_bits_set = yield from self._conn.eval(
+            script_check_bits, [key], bit_positions)
+
+        return is_all_bits_set
 
     def _validate_bloom_input(self, other_bloom):
         # return new_bloom

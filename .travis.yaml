@@ -1,0 +1,27 @@
+language: python
+
+python:
+- "3.3"
+- "3.4"
+
+before_install:
+- sudo add-apt-repository -y ppa:chris-lea/redis-server
+- echo "deb http://ppa.launchpad.net/chris-lea/redis-server/ubuntu oneiric main" | sudo tee -a /etc/apt/sources.list
+- sudo apt-get update -qq
+
+
+install:
+- pip install aioredis
+- pip install mmh3
+- pip install pyflakes
+- pip install pep8
+- pip install coverage
+- pip install -e .
+
+before_script:
+- sleep 3
+
+script:
+- pyflakes aioredis_bloom tests
+- pep8 aioredis_bloom tests
+- python runtests.py --coverage -v

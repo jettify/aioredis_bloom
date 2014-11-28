@@ -5,15 +5,12 @@ from aioredis_bloom.bloom import BloomFilter
 from ._testutil import BaseTest, run_until_complete
 
 
-__all__ = ['BloomFilterTest']
-
-
 class BloomFilterTest(BaseTest):
 
     def setUp(self):
         super().setUp()
         self.redis = self.loop.run_until_complete(create_redis(
-            ('localhost', 6379), loop=self.loop))
+            ('127.0.0.1', 6379), loop=self.loop))
         self.loop.run_until_complete(self._delete_test_keys())
 
     def tearDown(self):

@@ -5,6 +5,9 @@ import uuid
 import mmh3
 
 
+__all__ = ['BloomFilter']
+
+
 class BloomFilter(object):
 
     def __init__(self, redis, capacity: int=100000, error_rate: float=0.001,

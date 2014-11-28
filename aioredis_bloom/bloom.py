@@ -78,7 +78,6 @@ class BloomFilter(object):
         new_bloom = BloomFilter(self._conn, capacity, error_rate, redis_key)
         return new_bloom
 
-
     @asyncio.coroutine
     def intersection(self, other_bloom, redis_key=None):
         """

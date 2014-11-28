@@ -5,17 +5,18 @@ from aioredis_bloom.bloom import BloomFilter
 from ._testutil import BaseTest, run_until_complete
 
 
-class BloomFilterTest(BaseTest):
+__all__ = ['BloomFilterTest']
 
+
+class BloomFilterTest(BaseTest):
 
     def setUp(self):
         super().setUp()
         self.redis = self.loop.run_until_complete(create_redis(
-        ('localhost', 6379), loop=self.loop))
+            ('localhost', 6379), loop=self.loop))
         self.loop.run_until_complete(self._delete_test_keys())
 
     def tearDown(self):
-
         self.redis.close()
         del self.redis
         super().tearDown()
@@ -107,8 +108,6 @@ class BloomFilterTest(BaseTest):
     def test_intersection(self):
         bloom1 = BloomFilter(self.redis, 100000, 0.001, 'test_bloom:1')
         bloom2 = BloomFilter(self.redis, 100000, 0.001, 'test_bloom:2')
-
-
 
         for i in range(100):
             # common elements in both filters

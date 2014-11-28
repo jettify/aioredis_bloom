@@ -6,8 +6,21 @@ import uuid
 
 class BloomFilter(object):
 
-    def __init__(self, redis, capacity=100000, error_rate=0.001,
-                 redis_key=None):
+    def __init__(self, redis, capacity: int=100000, error_rate: float=0.001,
+                 redis_key: str=None):
+        """Implements a space-efficient probabilistic data structure
+
+        :param redis: aioredis connection object
+        :param capacity: this BloomFilter must be able to store at least
+            *capacity* elements while maintaining no more than
+            *error_rate* chance of false positives
+        :param error_rate: the error_rate of the filter returning false
+            positives. This determines the filters capacity. Inserting
+            more than capacity elements greatly increases the chance of
+            false positives.
+        :param redis_key: key in redis, where bits for bloom filter will
+            be stored.
+        """
         # redis settings
         self._conn = redis
         # if redis key not provided, generate random one
@@ -17,7 +30,7 @@ class BloomFilter(object):
         self._capacity = capacity
         self._error_rate = error_rate
         # bloom filter settings
-        self._filter_size, self._hash_funcs = self._optimal_bloom_filter(
+        self._filter_size, self._hash_funcs = self.optimal_bloom_filter(
             self._capacity, self._error_rate)
         self._bits_per_slice = int(self._filter_size/self._hash_funcs)
 
@@ -38,7 +51,7 @@ class BloomFilter(object):
 
     @asyncio.coroutine
     def add(self, key):
-        """
+        """Adds a key to this bloom filter.
 
         :param key:
         :return:
@@ -48,17 +61,19 @@ class BloomFilter(object):
 
     @asyncio.coroutine
     def contains(self, key):
-        """
+        """Tests a key's membership in this bloom filter.
 
         :param key:
         :return:
         """
         bit_positions = self._calc_bit_positions(key)
-        return (yield from self._check_bits(self._redis_key, bit_positions))
+        result = yield from self._check_bits(self._redis_key, bit_positions)
+        return bool(result)
 
     @asyncio.coroutine
     def union(self, other_bloom, redis_key=None):
-        """
+        """Calculates the union of the two underlying bit containers and
+        returns a new bloom filter object.
 
         :param other_bloom:
         :param redis_key:
@@ -80,7 +95,8 @@ class BloomFilter(object):
 
     @asyncio.coroutine
     def intersection(self, other_bloom, redis_key=None):
-        """
+        """Calculates the intersection of the two underlying bit containers
+        and returns a new bloom filter object.
 
         :param other_bloom:
         :param redis_key:
@@ -100,7 +116,7 @@ class BloomFilter(object):
         return new_bloom
 
     @staticmethod
-    def _optimal_bloom_filter(capacity, failure_rate):
+    def optimal_bloom_filter(capacity, failure_rate):
         """
         :param capaciy int:
         :param failure_rate:
@@ -128,7 +144,6 @@ class BloomFilter(object):
 
     @asyncio.coroutine
     def _set_bits(self, key, bit_positions):
-        # TODO: preload script and use evalsha
         script_set_bits = """
         for _, arg in ipairs(ARGV) do
             redis.call('SETBIT', KEYS[1], arg, 1)
@@ -138,7 +153,6 @@ class BloomFilter(object):
 
     @asyncio.coroutine
     def _check_bits(self, key, bit_positions):
-        # TODO: preload script and use evalsha
         script_check_bits = """
         for _, arg in ipairs(ARGV) do
             if redis.call('GETBIT', KEYS[1], arg) == 0
@@ -150,11 +164,9 @@ class BloomFilter(object):
         """
         is_all_bits_set = yield from self._conn.eval(
             script_check_bits, [key], bit_positions)
-
         return is_all_bits_set
 
     def _validate_bloom_input(self, other_bloom):
-        # return new_bloom
         if not isinstance(other_bloom, BloomFilter):
             raise TypeError('other_bloom must be instance of {}'
                             .format(self.__class__.__name__))

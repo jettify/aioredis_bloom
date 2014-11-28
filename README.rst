@@ -2,7 +2,7 @@ aioredis_bloom (work in progress)
 =================================
 
 A simple bloom filter written in Python 3 with asyncio_ using, redis
-(aioreids_) as storage and the Murmur (mmh3_) hash.
+( aioreids_ ) as storage and the Murmur (mmh3_) hash.
 
 Expected api:
 

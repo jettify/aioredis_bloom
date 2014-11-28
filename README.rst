@@ -1,6 +1,10 @@
 aioredis_bloom
 ==============
 
+.. image:: https://travis-ci.org/jettify/aioredis_bloom.svg
+    :target: https://travis-ci.org/jettify/aioredis_bloom
+    :alt: |Build status|
+
 A simple bloom filter written in Python 3 with asyncio_ using, redis
 ( aioredis_ ) as storage and the Murmur (mmh3_) hash.
 
@@ -88,6 +92,11 @@ Requirements
 * asyncio_ or Python_ 3.4+
 * aioredis_
 * mmh3_
+
+TODO
+----
+1) add support for aioredis pool
+
 
 
 License

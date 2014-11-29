@@ -10,7 +10,7 @@ __all__ = ['BloomFilter']
 
 class BloomFilter(object):
 
-    def __init__(self, redis, capacity: int=100000, error_rate: float=0.001,
+    def __init__(self, redis, capacity=100000, error_rate=0.001,
                  redis_key: str=None):
         """Implements a space-efficient probabilistic data structure
 

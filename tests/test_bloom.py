@@ -36,6 +36,13 @@ class BloomFilterTest(BaseTest):
         self.assertEqual(bloom.capacity, capacity)
         self.assertEqual(bloom.error_rate, error_rate)
 
+        with self.subTest('Wrong capacity or error rate'):
+            with self.assertRaises(ValueError):
+                BloomFilter(self.redis, -10, error_rate, redis_key)
+
+            with self.assertRaises(ValueError):
+                BloomFilter(self.redis, 100, 5, redis_key)
+
     @run_until_complete
     def test_add_contains(self):
 

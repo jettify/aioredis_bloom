@@ -15,7 +15,7 @@ class BloomFilter(object):
         """Implements a space-efficient probabilistic data structure
 
         :param redis: aioredis connection object
-        :param capacity: this BloomFilter must be able to store at least
+        :param capacity:  this BloomFilter must be able to store at least
             *capacity* elements while maintaining no more than
             *error_rate* chance of false positives
         :param error_rate: the error_rate of the filter returning false
@@ -57,8 +57,8 @@ class BloomFilter(object):
     def add(self, key):
         """Adds a key to this bloom filter.
 
-        :param key:
-        :return:
+        :param key: ``str``, key that must be added to the filter.
+        :return: ``bool``
         """
         bit_positions = self._calc_bit_positions(key)
         yield from self._set_bits(self._redis_key, bit_positions)
@@ -67,8 +67,8 @@ class BloomFilter(object):
     def contains(self, key):
         """Tests a key's membership in this bloom filter.
 
-        :param key:
-        :return:
+        :param key: ``str``, key to test membership
+        :return: ``bool``
         """
         bit_positions = self._calc_bit_positions(key)
         result = yield from self._check_bits(self._redis_key, bit_positions)
@@ -76,12 +76,13 @@ class BloomFilter(object):
 
     @asyncio.coroutine
     def union(self, other_bloom, redis_key=None):
-        """Calculates the union of the two underlying bit containers and
+        """Calculates the union of the two Bloom filters and
         returns a new bloom filter object.
 
-        :param other_bloom:
-        :param redis_key:
-        :return:
+        :param other_bloom: other bloom filter for union
+        :param redis_key: key for redis storage, if not present key will be
+            generated automatically
+        :return: ``BloomFilter``, new resulting filter
         """
         self._validate_bloom_input(other_bloom)
         if not redis_key:
@@ -99,12 +100,12 @@ class BloomFilter(object):
 
     @asyncio.coroutine
     def intersection(self, other_bloom, redis_key=None):
-        """Calculates the intersection of the two underlying bit containers
-        and returns a new bloom filter object.
+        """Calculates the intersection of the two Bloom filters
+        and returns a new Bloom filter object.
 
-        :param other_bloom:
-        :param redis_key:
-        :return:
+        :param other_bloom: ``BloomFilter`` to intersect with
+        :param redis_key: ``str``
+        :return: ``BloomFilter``, new resulting filter
         """
         self._validate_bloom_input(other_bloom)
         if not redis_key:
@@ -121,17 +122,30 @@ class BloomFilter(object):
 
     @staticmethod
     def optimal_bloom_filter(capacity, failure_rate):
-        """
+        """Calculate size of bit array and required number of hash functions
+        for expected capacity and failure_rate
+
         :param capaciy int:
         :param failure_rate:
         :returns: tuple
         """
+        if capacity < 0:
+            raise ValueError('Capacity must be greater then 0 got: {}'
+                             .format(capacity))
+        if failure_rate < 0 or failure_rate > 1.0:
+            raise ValueError('Failure rate must be in range (0, 1) got {}'
+                             .format(failure_rate))
+
         n, p = float(capacity), float(failure_rate)
         m = -1 * (n * math.log(p)) / (math.log(2) ** 2)
         k = (m / n) * math.log(2)
-        return int(math.ceil(m)), int(math.ceil(k))
+        filter_size = int(math.ceil(m))
+        hash_funcs = int(math.ceil(k))
+        return filter_size, hash_funcs
 
     def _hash_bits(self, key):
+        # http://spyced.blogspot.com/2009
+        # /01/all-you-ever-wanted-to-know-about.html
         hash1 = mmh3.hash(key, 0)
         hash2 = mmh3.hash(key, hash1)
         for i in range(self._hash_funcs):

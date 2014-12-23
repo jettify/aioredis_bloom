@@ -1,11 +1,13 @@
 aioredis_bloom
 ==============
-
 .. image:: https://travis-ci.org/jettify/aioredis_bloom.svg
     :target: https://travis-ci.org/jettify/aioredis_bloom
     :alt: |Build status|
+.. image:: https://coveralls.io/repos/jettify/aioredis_bloom/badge.png?branch=master
+    :target: https://coveralls.io/r/jettify/aioredis_bloom?branch=master
+    :alt: |Coverage status|
 
-A simple bloom filter written in Python 3 with asyncio_ using, redis
+A simple Bloom_ filter written in Python 3 with asyncio_ using, redis
 ( aioredis_ ) as storage and the Murmur (mmh3_) hash.
 
 
@@ -105,6 +107,7 @@ Thanks
 ------
 I've learned a lot from following projects:
 
+* https://github.com/aio-libs/aioredis
 * https://github.com/jaybaird/python-bloomfilter
 * https://github.com/dariajung/bloom
 * https://github.com/bkz/bloom
@@ -120,3 +123,4 @@ The *aioredis_bloom* is offered under MIT license.
 .. _asyncio: http://docs.python.org/3.4/library/asyncio.html
 .. _aioredis: https://github.com/aio-libs/aioredis
 .. _mmh3: https://pypi.python.org/pypi/mmh3/
+.. _Bloom: http://en.wikipedia.org/wiki/Bloom_filter

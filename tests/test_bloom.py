@@ -15,6 +15,7 @@ class BloomFilterTest(BaseTest):
 
     def tearDown(self):
         self.redis.close()
+        self.loop.run_until_complete(self.redis.wait_closed())
         del self.redis
         super().tearDown()
 

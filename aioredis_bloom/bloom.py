@@ -8,7 +8,7 @@ import mmh3
 __all__ = ['BloomFilter']
 
 
-class BloomFilter(object):
+class BloomFilter:
 
     def __init__(self, redis, capacity=100000, error_rate=0.001,
                  redis_key: str=None):
@@ -58,7 +58,6 @@ class BloomFilter(object):
         """Adds a key to this bloom filter.
 
         :param key: ``str``, key that must be added to the filter.
-        :return: ``bool``
         """
         bit_positions = self._calc_bit_positions(key)
         yield from self._set_bits(self._redis_key, bit_positions)
@@ -125,9 +124,9 @@ class BloomFilter(object):
         """Calculate size of bit array and required number of hash functions
         for expected capacity and failure_rate
 
-        :param capaciy int:
+        :param capacity int:
         :param failure_rate:
-        :returns: tuple
+        :returns: tuple, filter size and num of hash functions
         """
         if capacity < 0:
             raise ValueError('Capacity must be greater then 0 got: {}'

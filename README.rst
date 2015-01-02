@@ -8,11 +8,13 @@ aioredis_bloom
     :alt: |Coverage status|
 
 A simple Bloom_ filter written in Python 3 with asyncio_ using, redis
-( aioredis_ ) as storage and the Murmur (mmh3_) hash.
+( aioredis_ ) as storage and the Murmur (mmh3_) hash. Bloom filter is a
+space-efficient probabilistic data structure, is used to test whether an
+element is a member of a set.
 
 
-Simple example api:
--------------------
+Basic api:
+----------
 .. code:: python
 
     import asyncio
@@ -41,6 +43,10 @@ Simple example api:
 
 Intersection and union of two bloom filters:
 --------------------------------------------
+
+Intersection and union of filters requires both filters to have
+both the same capacity and error rate.
+
 .. code:: python
 
     import asyncio

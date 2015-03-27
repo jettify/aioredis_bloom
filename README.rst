@@ -102,13 +102,6 @@ Requirements
 * mmh3_
 
 
-TODO
-----
-1) add support for aioredis pool
-2) refactor doc string
-3) add alternative constructor using size and num of hash functions
-
-
 Thanks
 ------
 I've learned a lot from following projects:
